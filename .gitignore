@@ -1,0 +1,12 @@
+node_modules
+.env
+pgdata*
+.DS_Store
+
+# IDE / editor configs
+.idea/
+.vscode/
+*.iml
+*.xml
+*.sublime*
+.copilot/
