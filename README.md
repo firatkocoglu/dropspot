@@ -4,6 +4,34 @@
 
 Full-stack case project for Alpaco — limited-stock and waitlist platform built with Express, Prisma, PostgreSQL, and Next.js.
 
+**⚙️ Backend Setup**
+If you want to recreate the backend setup from scratch:  
+```
+# 1. Initialize a new Node.js project
+mkdir backend && cd backend
+npm init -y
+
+# 2. Install core dependencies
+npm install express
+npm install dotenv cors helmet
+
+# 3. Add TypeScript and types
+npm install -D typescript ts-node-dev @types/node @types/express
+
+# 4. Initialize TypeScript config
+npx tsc --init
+
+# 5. Add Prisma ORM
+npm install prisma @prisma/client
+npx prisma init
+
+# 6. Create project structure
+mkdir src src/config src/controllers src/services src/middlewares src/routes src/utils
+touch src/app.ts src/server.ts
+```
+
+
+
 **📦 Data Model & Rationale**
 
 **🐳 Local Development Environment**
