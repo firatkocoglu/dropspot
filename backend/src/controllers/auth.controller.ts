@@ -7,9 +7,9 @@ export const AuthController = {
         const result = await AuthService.signup(email, password);
         res.cookie('refresh-token', result.refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'lax',
-            path: '/auth',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.status(201).json({
@@ -23,9 +23,9 @@ export const AuthController = {
         const result = await AuthService.login(email, password);
         res.cookie('refresh-token', result.refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'lax',
-            path: '/auth',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.json({
@@ -45,9 +45,9 @@ export const AuthController = {
         const result = await AuthService.refresh(refreshToken);
         res.cookie('refresh-token', result.refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'lax',
-            path: '/auth',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.json({
@@ -56,9 +56,10 @@ export const AuthController = {
     },
 
     async logout(req: Request, res: Response) {
-        const refreshToken = req.cookies["refresh-token"];
-        if (refreshToken) {
-            await AuthService.logout(refreshToken);
+        const refreshToken = req.cookies?.["refresh-token"];
+        const accessToken = req.headers.authorization?.split(" ")[1];
+        if (refreshToken && accessToken) {
+            await AuthService.logout(refreshToken, accessToken);
         }
         res.clearCookie('refresh-token', { path: '/auth' });
         return res.status(204).end();

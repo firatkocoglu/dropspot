@@ -1,8 +1,11 @@
 import {PrismaClient} from '@prisma/client';
 import {hashPassword, sha256, verifyPassword} from "@/utils/hash";
-import {signAccess, signRefresh, verifyRefresh} from "@/utils/jwt";
+import {signAccess, signRefresh, verifyAccess, verifyRefresh} from "@/utils/jwt";
 import {env} from '@/config/env';
 import {throwError} from "@/utils/errors";
+import {v4 as uuidv4} from "uuid";
+import {redis} from "@/utils/redis";
+
 
 const prisma = new PrismaClient();
 
@@ -29,7 +32,7 @@ export const AuthService = {
         });
 
         // Generate JWT tokens
-        const accessToken = signAccess({ sub: newUser.id, role: newUser.role })
+        const accessToken = signAccess({ sub: newUser.id, role: newUser.role, jti: uuidv4() })
         const refreshToken = signRefresh({ sub: newUser.id, role: newUser.role })
 
         // Save refreshToken hash in the database
@@ -69,7 +72,7 @@ export const AuthService = {
         if (! verified) throwError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
 
         // Generate JWT tokens
-        const accessToken = signAccess({ sub: user.id, role: user.role })
+        const accessToken = signAccess({ sub: user.id, role: user.role, jti: uuidv4() })
         const refreshToken = signRefresh({ sub: user.id, role: user.role })
 
 
@@ -93,7 +96,7 @@ export const AuthService = {
         }
     },
 
-    async logout(refreshToken: string) {
+    async logout(refreshToken: string, accessToken: string) {
         const refreshTokenHash = sha256(refreshToken);
         const session = await prisma.session.findUnique(
             { where: { refreshTokenHash } }
@@ -104,6 +107,19 @@ export const AuthService = {
             where: { refreshTokenHash, revokedAt: null },
             data: { revokedAt: new Date() },
         })
+
+        // Blacklist access token if provided
+        if (accessToken) {
+            try {
+                const payload = verifyAccess(accessToken);
+                if (payload && payload.jti && payload.exp) {
+                    const ttlSeconds = Math.max(payload.exp - Math.floor(Date.now() / 1000), 1);
+                    await redis.setex(`deny:access:${payload.jti}`, ttlSeconds, "1");
+                }
+            } catch (e) {
+                // Ignore errors to keep logout idempotent
+            }
+        }
 
         // For idempotency, regardless of matched row count return 204
         return {status: 204};
@@ -123,8 +139,8 @@ export const AuthService = {
         })
 
         if (!session) throwError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token invalid or expired');
-
-        if ((session.revokedAt || session.expiresAt <= new Date())) throwError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is expired');
+        
+        if (session.revokedAt || session.expiresAt <= new Date()) throwError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is expired');
 
         // Revoke the old session
         await prisma.session.updateMany({

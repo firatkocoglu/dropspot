@@ -29,7 +29,6 @@ export const DropController = {
 
     async update(req: any, res: any) {
         const { id } = req.params;
-        console.log(id);
         const patch = req.body as Partial<{
             title: string;
             description: string | null;

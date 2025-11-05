@@ -1,5 +1,5 @@
-import jwt, { JwtPayload as JwtStandardPayload, Secret } from 'jsonwebtoken';
-import { env } from '@/config/env';
+import jwt, {JwtPayload as JwtStandardPayload} from 'jsonwebtoken';
+import {env} from '@/config/env';
 
 // App-specific JWT payload shape
 // - sub holds the userId
@@ -7,6 +7,7 @@ import { env } from '@/config/env';
 export interface AppJwtPayload extends JwtStandardPayload {
     sub: string;
     role: 'USER' | 'ADMIN';
+    jti?: string;
 }
 
 // Create a short-lived access token
