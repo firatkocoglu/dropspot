@@ -88,5 +88,5 @@ To keep the schema simple and correct, remaining capacity is derived at read/cla
 ```
 remaining = totalSlots − COUNT(Claim WHERE dropId = X AND status IN (ISSUED, USED))
 ```
-This avoids denormalization bugs though I can still add denormalized remaining filed into drops table in case the remaining calculation we implemented bottlenecks in high traffic and load.
+This avoids denormalization bugs though I can still add denormalized remaining field into drops table in case the remaining calculation that we implemented bottlenecks in high traffic and load.
 But for the sake of simplicity in limited time (72 hours), I choose to implement simple remaining calculation.
