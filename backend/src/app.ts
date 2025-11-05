@@ -8,7 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
-app.use(errorHandler)
 
 app.get('/healthz', (_req, res) => {
     res.json({ ok: true });
@@ -23,4 +22,6 @@ app.get('/health/db',async(_req, res) => {
    }
 });
 
+
+app.use(errorHandler)
 export default app;

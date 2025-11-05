@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 export interface ErrorHandler {
     statusCode?: number,
     message?: string,
+    name?: string,
 }
 
 /**
@@ -15,7 +16,9 @@ export function errorHandler (error: ErrorHandler, req: Request, res: Response, 
 
     // Do not expose internal server errors to the client
     const response = {
-        error: error.message ?? 'Internal Server Error',
+        name: error.name ?? 'INTERNAL_ERROR',
+        message: error.message ?? 'Internal Server Error',
+        status: statusCode
     }
 
     res.status(statusCode).json(response);

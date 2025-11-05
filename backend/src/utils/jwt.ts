@@ -2,10 +2,10 @@ import jwt, { JwtPayload as JwtStandardPayload, Secret } from 'jsonwebtoken';
 import { env } from '@/config/env';
 
 // App-specific JWT payload shape
-// - subject holds the userId
+// - sub holds the userId
 // - role is used for authorization checks
 export interface AppJwtPayload extends JwtStandardPayload {
-    subject: string;
+    sub: string;
     role: 'USER' | 'ADMIN';
 }
 
