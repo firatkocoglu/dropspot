@@ -1,5 +1,6 @@
 import {NextFunction, Request, Response} from "express";
 import {verifyAccess} from "@/utils/jwt";
+import {redis} from "@/utils/redis";
 
 /**
  * Shape attached to req.user after successful authentication
@@ -34,7 +35,7 @@ function getBearerTokenFromHeader (authHeader?: string | undefined): string | an
  * If valid, attaches the user info to req.user.
  * If the token is missing or invalid, returns a 401 Unauthorized response.
  */
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
     const token = getBearerTokenFromHeader(authHeader)
 
@@ -47,8 +48,16 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
             });
     }
 
+
     try {
         const payload = verifyAccess(token);
+        // Check if the token has been blacklisted
+        const tokenJti = payload.jti;
+        const isBlacklisted = await redis.get(`deny:access:${tokenJti}`);
+        if (isBlacklisted) {
+            return res.status(401).json({ error: 'TOKEN_BLACKLISTED', message: 'Access token has been blacklisted'})
+        }
+
         req.user = { id: payload.subject, role: payload.role };
         return next();
     } catch (e) {
