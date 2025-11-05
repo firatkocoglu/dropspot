@@ -1,13 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import { prisma} from "./config/prisma";
+import {prisma} from "./config/prisma";
 import {errorHandler} from "@/middlewares/errorHandler";
+import {authRouter} from "@/routes/auth.routes";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan('dev'));
+
+// Routes
+app.use('/auth', authRouter);
 
 app.get('/healthz', (_req, res) => {
     res.json({ ok: true });
@@ -22,6 +28,6 @@ app.get('/health/db',async(_req, res) => {
    }
 });
 
-
 app.use(errorHandler)
+
 export default app;
