@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { verifyAccess } from "@/utils/jwt";
+import {NextFunction, Request, Response} from "express";
+import {verifyAccess} from "@/utils/jwt";
 
 /**
  * Shape attached to req.user after successful authentication
@@ -34,7 +34,7 @@ function getBearerTokenFromHeader (authHeader?: string | undefined): string | an
  * If valid, attaches the user info to req.user.
  * If the token is missing or invalid, returns a 401 Unauthorized response.
  */
-function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
     const token = getBearerTokenFromHeader(authHeader)
 

@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import {prisma} from "./config/prisma";
 import {errorHandler} from "@/middlewares/errorHandler";
 import {authRouter} from "@/routes/auth.routes";
+import {dropRouter} from "@/routes/drop.routes";
 
 const app = express();
 app.use(cors());
@@ -14,8 +15,9 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/auth', authRouter);
+app.use('/drops', dropRouter);
 
-app.get('/healthz', (_req, res) => {
+app.get('/health', (_req, res) => {
     res.json({ ok: true });
 });
 
