@@ -62,7 +62,7 @@ export const DropService = {
         const newStart = patch.claimWindowStart ?? drop.claimWindowStart;
         const newEnd = patch.claimWindowEnd ?? drop.claimWindowEnd;
 
-        // Updated claim windows start can't be after end window
+        // Updated claim window start can't be after end window
         if (newStart >= newEnd) {
             throwError(400, 'INVALID_PATCH', 'claimWindowStart must be before claimWindowEnd');
         }
@@ -86,7 +86,5 @@ export const DropService = {
             where: { id },
         });
     }
-
-
 }
 
