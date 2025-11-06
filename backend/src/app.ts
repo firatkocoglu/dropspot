@@ -7,6 +7,7 @@ import {errorHandler} from "@/middlewares/errorHandler";
 import {authRouter} from "@/routes/auth.routes";
 import {dropRouter} from "@/routes/drop.routes";
 import {waitlistRouter} from "@/routes/waitlist.routes";
+import {claimRouter} from "@/routes/claim.routes";
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,8 @@ app.use('/auth', authRouter);
 app.use('/drops', dropRouter);
 // Waitlist endpoints share same prefix as drops
 app.use('/drops', waitlistRouter)
+// Claim endpoints
+app.use('/drops', claimRouter)
 
 app.get('/health', (_req, res) => {
     res.json({ ok: true });
