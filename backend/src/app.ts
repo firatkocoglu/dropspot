@@ -6,6 +6,7 @@ import {prisma} from "./config/prisma";
 import {errorHandler} from "@/middlewares/errorHandler";
 import {authRouter} from "@/routes/auth.routes";
 import {dropRouter} from "@/routes/drop.routes";
+import {waitlistRouter} from "@/routes/waitlist.routes";
 
 const app = express();
 app.use(cors());
@@ -15,7 +16,10 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/auth', authRouter);
+// Drop CRUD
 app.use('/drops', dropRouter);
+// Waitlist endpoints share same prefix as drops
+app.use('/drops', waitlistRouter)
 
 app.get('/health', (_req, res) => {
     res.json({ ok: true });

@@ -58,7 +58,7 @@ export async function requireAuth(req: AuthenticatedRequest, res: Response, next
             return res.status(401).json({ error: 'TOKEN_BLACKLISTED', message: 'Access token has been blacklisted'})
         }
 
-        req.user = { id: payload.subject, role: payload.role };
+        req.user = { id: payload.sub, role: payload.role };
         return next();
     } catch (e) {
         return res
