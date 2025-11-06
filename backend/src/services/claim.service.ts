@@ -45,7 +45,7 @@ export const ClaimService = {
                 select: {userId: true, priorityScore: true}
             })
 
-            const eligible = topN.find(eligible => eligible.userId === userId);
+            const eligible = topN.some(eligible => eligible.userId === userId);
             if (!eligible) throwError(409, 'NOT_ELIGIBLE', 'User is not eligible to claim')
 
             // Ensure user has not already claimed

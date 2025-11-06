@@ -1,5 +1,5 @@
 import {PrismaClient} from '@prisma/client';
-import {hashPassword, sha256, verifyPassword} from "@/utils/hash";
+import {generateRefreshToken, hashPassword, sha256, verifyPassword} from "@/utils/hash";
 import {signAccess, signRefresh, verifyAccess, verifyRefresh} from "@/utils/jwt";
 import {env} from '@/config/env';
 import {throwError} from "@/utils/errors";
@@ -71,12 +71,11 @@ export const AuthService = {
 
         if (! verified) throwError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
 
-        // Generate JWT tokens
+        // Generate JWT token
         const accessToken = signAccess({ sub: user.id, role: user.role, jti: uuidv4() })
-        const refreshToken = signRefresh({ sub: user.id, role: user.role })
 
-
-        const refreshTokenHash = sha256(refreshToken);
+        const candidate = generateRefreshToken()
+        const refreshTokenHash = sha256(candidate);
         const expiresAt = new Date(Date.now() + extendRefreshTokenDuration(env.refreshTtl));
 
         // Save refreshToken hash in the database
@@ -88,6 +87,7 @@ export const AuthService = {
             }
         })
 
+        let refreshToken: string = candidate;
         // Return user info and tokens (refresh will be set as HttpOnly cookie in controller)
         return {
             user: {id: user.id, email: user.email},
