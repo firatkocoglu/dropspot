@@ -93,7 +93,7 @@ But for the sake of simplicity in limited time (72 hours), I choose to implement
 
 ### Backend Overview
 
-**Tech Stack**
+**Tech Stack**  
 •	Runtime: Node.js + TypeScript + Express  
 •	DB: PostgreSQL (Prisma ORM)  
 •	Cache/Flags: Redis (token blacklist)  
