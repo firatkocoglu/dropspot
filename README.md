@@ -130,7 +130,6 @@ tests/
 | Method | Path | Auth | Description | Notes |
 |---|---|---|---|---|
 | GET | `/drops` | ❌ | List active drops | Query: paging/sort (optional) |
-| GET | `/drops/:id` | ❌ | Get drop details | — |
 
 ### Auth
 | Method | Path | Auth | Description | Body (min) | Response (min) | Idempotency / Notes |
@@ -145,7 +144,6 @@ tests/
 |---|---|---|---|---|---|--|
 | GET | `/admin/drops` | ✅ Admin | List all drops (admin) | — | `Drop[]` |  |
 | POST | `/admin/drops` | ✅ Admin | **Create drop** | `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` |  |
-| GET | `/admin/drops/:id` | ✅ Admin | Get one drop | — | `Drop` | `404` if not found |
 | PUT | `/admin/drops/:id` | ✅ Admin | **Update drop** | Any of: `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` | Validates window range and slot consistency |
 | DELETE | `/admin/drops/:id` | ✅ Admin | **Delete drop** | — | `204 No Content` | Cascades to dependent rows |
 
