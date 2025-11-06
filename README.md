@@ -177,7 +177,7 @@ tests/
 **Refresh flow (auto, middleware)**
 •	refreshSession middleware: on each protected request,  
 •	verifies access token; if expired, and a valid refresh cookie/session exists → rotates tokens and injects the new access token into the same request so the pipeline continues without failing.  
-•	Why: zero UX friction for clients; keeps handlers clean.  
+•	Why: zero UX friction for clients and keeps handlers clean.  
 
 
 **Logout & token revocation**
@@ -275,9 +275,6 @@ export function generateCoefficientsFromSeed (seed: string) {
     return {A, B, C}
 }
 ```
-
-**Ranges**
-- `A ∈ [7, 11]`, `B ∈ [13, 19]`, `C ∈ [3, 5]` — small, human‑auditable ranges.
 
 ### 3) Where we use them
 When a user joins a waitlist we compute and persist:
