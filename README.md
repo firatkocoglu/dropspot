@@ -91,7 +91,7 @@ remaining = totalSlots − COUNT(Claim WHERE dropId = X AND status IN (ISSUED, U
 This avoids denormalization bugs though I can still add denormalized remaining field into drops table in case the remaining calculation that we implemented bottlenecks in high traffic and load.
 But for the sake of simplicity in limited time (72 hours), I choose to implement simple remaining calculation.
 
-### Backend Overview
+## ⚙️Backend Overview
 
 **Tech Stack**  
 •	Runtime: Node.js + TypeScript + Express  
