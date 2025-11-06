@@ -90,3 +90,204 @@ remaining = totalSlots − COUNT(Claim WHERE dropId = X AND status IN (ISSUED, U
 ```
 This avoids denormalization bugs though I can still add denormalized remaining field into drops table in case the remaining calculation that we implemented bottlenecks in high traffic and load.
 But for the sake of simplicity in limited time (72 hours), I choose to implement simple remaining calculation.
+
+### Backend Overview
+
+**Tech Stack**
+•	Runtime: Node.js + TypeScript + Express
+•	DB: PostgreSQL (Prisma ORM)
+•	Cache/Flags: Redis (token blacklist)
+•	Auth: JWT (access) + DB-backed sessions (refresh)
+•	Tests: Vitest +
+
+**Folder Structure**
+```
+backend/
+    src/
+    config/        # prisma client, env loader
+    controllers/   # HTTP boundary (thin)
+    middlewares/   # auth guards, refreshSession
+    routes/        # route modules mounted under /drops, /auth, ...
+    services/      # business logic (DropService, WaitlistService, ClaimService, AuthService)
+    utils/         # helpers (hash, jwt, error, redis client, etc.)
+tests/
+    unit/          # generateClaimCode.test.ts
+    integration/   # claim.flow.test.ts (+ window/edge scenarios)
+```
+
+**Packages (Why we use them)**
+•	express — minimal HTTP framework.  
+•	jsonwebtoken — signs/verifies access & refresh tokens.  
+•	cookie-parser — reads HttpOnly refresh cookie safely.  
+•	bcrypt / argon2 (whichever you used) — password hashing.  
+•	@prisma/client — DB access via Prisma.  
+•	ioredis / redis — Redis client for token blacklist.  
+
+
+### Endpoints and CRUD Operations
+
+### Public (Browse)
+| Method | Path | Auth | Description | Notes |
+|---|---|---|---|---|
+| GET | `/drops` | ❌ | List active drops | Query: paging/sort (optional) |
+| GET | `/drops/:id` | ❌ | Get drop details | — |
+
+### Auth
+| Method | Path | Auth | Description | Body (min) | Response (min) | Idempotency / Notes |
+|---|---|---|---|---|---|---|
+| POST | `/auth/signup` | ❌ | Create user | `{ email, password }` | `{ accessToken, user }` + HttpOnly refresh cookie | Creating same email → 409 |
+| POST | `/auth/login` | ❌ | Login | `{ email, password }` | `{ accessToken, user }` + HttpOnly refresh cookie | Wrong credentials → 401 |
+| POST | `/auth/logout` | ✅ | Logout current session | — | `204 No Content` | Access token blacklisted, refresh revoked |
+| POST | `/auth/refresh` | (Cookie) | Rotate tokens | — (HttpOnly refresh cookie) | `{ accessToken }` (rotated) | Session revoked/expired → 401 |
+
+### Admin — Drop CRUD
+| Method | Path | Auth | Description | Body (min) | Response (min) | Idempotency / Notes |
+|---|---|---|---|---|---|--|
+| GET | `/admin/drops` | ✅ Admin | List all drops (admin) | — | `Drop[]` |  |
+| POST | `/admin/drops` | ✅ Admin | **Create drop** | `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` |  |
+| GET | `/admin/drops/:id` | ✅ Admin | Get one drop | — | `Drop` | `404` if not found |
+| PUT | `/admin/drops/:id` | ✅ Admin | **Update drop** | Any of: `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` | Validates window range and slot consistency |
+| DELETE | `/admin/drops/:id` | ✅ Admin | **Delete drop** | — | `204 No Content` | Cascades to dependent rows |
+
+### Waitlist
+| Method | Path | Auth | Description | Body | Response | Idempotency / Notes |
+|---|---|---|---|---|---|---|
+| POST | `/drops/:id/join` | ✅ | Join waitlist | — | `200 OK` (entry created) | `@@unique([userId,dropId])` → repeated joins safe (no duplicates) |
+| POST | `/drops/:id/leave` | ✅ | Leave waitlist | — | `204 No Content` (or `200`) | If not joined → `409 NOT_IN_WAITLIST` |
+
+### Claim
+| Method | Path | Auth | Description | Body | Response | Idempotency / Notes |
+|---|---|---|---|---|---|---|
+| POST | `/drops/:id/claim` | ✅ | Claim within window | — | `200 { code, issuedAt, usedAt? }` | Transactional operation with Drop row lock; returns `409` for `SOLD_OUT`, `ALREADY_CLAIMED`, `NOT_IN_WAITLIST`, or `CLAIM_WINDOW_CLOSED`. |
+
+### Architecture and Logic Breakdown
+
+**Controller–Service **
+•	Controllers: parse input, call a single service method, shape the HTTP response.  
+•	Services: all business logic (transactions, locks, domain rules) live here.  
+•	Why: testability, clear boundaries, and easier refactors.  
+
+
+**Auth model (Short-lived access + long-lived refresh)**
+•	Access token (JWT): short TTL (15m), carried via Authorization: Bearer.  
+•	Refresh token: stored as HttpOnly cookie (not JS-accessible), persisted as hash in Session table with expiresAt.  
+•	Why: defense-in-depth. Compromise of access token is short-lived; refresh is revocable by server side (DB row).  
+
+
+**Refresh flow (auto, middleware)**
+•	refreshSession middleware: on each protected request,  
+•	verifies access token; if expired, and a valid refresh cookie/session exists → rotates tokens and injects the new access token into the same request so the pipeline continues without failing.  
+•	Why: zero UX friction for clients; keeps handlers clean.  
+
+
+**Logout & token revocation**
+•	Access token blacklist (Redis): on logout we SETEX bl:<jti> = 1 until token exp.  
+•	requireAuth checks Redis first
+•	Refresh revoke: mark session (DB) as revoked or delete row; cookie cleared.  
+•	Why: instant kill-switch for stolen tokens. 
+
+
+### Consistency, Transactions & Idempotency
+
+#### Why are Waitlist join and Claim inside a transaction?
+- **Atomicity**: Either all checks + writes succeed, or none do. This prevents partial states such as a user being added to the waitlist but failing during priority calculation or claim creation.
+- **Consistency**: Priority ordering, capacity checks, and window validation are evaluated against a single consistent snapshot.
+- **Race-safety**: Multiple users acting at the same time (e.g., last slot) cannot interleave steps and oversell.
+
+
+**Why do we lock the `Drop` row during Claim?**
+- **Capacity is owned by Drop**: The invariant is `usedCount(dropId) < totalSlots`. By acquiring a row lock on the specific Drop (`SELECT ... FOR UPDATE` via Prisma transaction) we **serialize** competing claims for that Drop.
+- **Prevents oversell**: Two requests cannot both observe the same remaining capacity and both insert a Claim; one observes the committed state of the other.
+- **Minimal lock footprint**: We lock only the relevant `Drop` row (not the whole table and not the entire waitlist) to keep contention low under load.
+
+
+**What exactly runs inside the Claim transaction?**
+1. Lock `Drop` row.
+2. Validate claim window (`start <= now <= end`) and `isActive`.
+3. Ensure user is on the waitlist.
+4. Compute `usedCount` and derive `remaining = totalSlots - usedCount`.
+5. Enforce **eligibility** (priority order with deterministic tiebreakers).
+6. Insert Claim (or detect existing one) and return the code.
+
+
+**Waitlist join invariants (in a transaction)**
+- Enforce `@@unique([userId, dropId])` and compute `priorityScore` exactly once.
+- The join is idempotent by design: repeating the same request won’t create duplicates.
+
+
+**Idempotency strategies used**
+- **Database-level uniqueness**
+    - `Waitlist`: `@@unique([userId, dropId])` → the same user cannot join twice.
+    - `Claim`: `@@unique([userId, dropId])` and `code @unique` → at most one claim per user per drop; code is globally unique.
+    - `Session`: `@unique(refreshTokenHash)` → each refresh token is unique.
+- **Application-level upsert / detect & map**
+    - Waitlist join: safe to retry; duplicate attempts resolve to the same row (conflict maps to a stable 200/409 depending on API choice).
+    - Claim: if the user already has a claim, we map to `409 ALREADY_CLAIMED` instead of creating a second one (making the operation **safe to retry**).
+- **Token revocation idempotency**
+    - Logout blacklists the current access token (`SETEX bl:<jti>`). Repeating logout is harmless (key already present or expired) → still a success (returns 204).
+
+
+
+---
+
+## Seed String & Priority Coefficients
+
+This project derives a deterministic seed to make the **priority score** stable and auditable while still being unpredictable across different repositories.
+
+### 1) Build the seed string (config/seed.ts)
+We concatenate three immutable project facts in a fixed order:
+
+- **PROJECT_START_DATE** – ISO string of when this case project started (e.g., `2025-11-04T18:00:00Z`).
+- **GITHUB_REMOTE_URL** – `<owner>/<repo>` (e.g., `https://github.com/firatkocoglu/dropspot`).
+- **FIRST_COMMIT_EPOCH** – Epoch timestamp of the first commit (e.g., `1762268549`)..
+
+Seed string format:
+```
+seedString = `${GITHUB_REPO_NAME}|${FIRST_COMMIT_DATE}|${PROJECT_START_DATE}`
+```
+
+Example implementation:
+```ts
+// config/seed.ts
+import { sha256 } from "@/utils/hash";
+
+const PROJECT_START_TIME = "202511041800"
+const GITHUB_REMOTE_URL = "https://github.com/firatkocoglu/dropspot"
+const FIRST_COMMIT_EPOCH = "1762268549"
+
+const seedString = `${GITHUB_REMOTE_URL}|${FIRST_COMMIT_EPOCH}|${PROJECT_START_DATE}`;
+const hashedSeed = sha256(seedString)
+return hashedSeed.substring(0, 12)
+```
+
+> **Why these fields?** They are stable for the lifetime of the project and uniquely identify the repository instance.
+
+### 2) Derive A, B, C coefficients (utils/seed.ts)
+From `PROJECT_SEED` we compute small, bounded coefficients used by the priority formula. The method is deterministic but repo‑specific.
+
+```ts
+// utils/seed.ts
+export function generateCoefficientsFromSeed (seed: string) {
+    const A = 7 + (parseInt(seed.substring(0, 2), 16) % 5) // coefficient of account age
+    const B = 13 + (parseInt(seed.substring(2, 4), 16) % 7) // coefficient of join order to waitlist
+    const C = 3 + (parseInt(seed.substring(4, 6), 16) % 3) // penalty coefficient for joining many waitlists (number of waitlists the user joined)
+
+    return {A, B, C}
+}
+```
+
+**Ranges**
+- `A ∈ [7, 11]`, `B ∈ [13, 19]`, `C ∈ [3, 5]` — small, human‑auditable ranges.
+
+### 3) Where we use them
+When a user joins a waitlist we compute and persist:
+```
+priorityScore = (A % userOrder) + (B % accountAgeDays) - (C % totalWaitlistsJoined)
+```
+- `userOrder` starts at **1** (not 0), so very new accounts aren’t penalized by a zero divisor.
+- The score is written once at join time and used for deterministic ordering:
+  `orderBy [priorityScore DESC, joinedAt ASC, id ASC]`.
+
+> This keeps the system fair and reproducible (no lotteries), while still preventing simple gaming strategies (e.g., mass‑joining many waitlists).
+
+---
