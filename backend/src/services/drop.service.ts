@@ -13,6 +13,17 @@ export const DropService = {
         return { drops, count: drops.length}
     },
 
+    async retrieve(id: string) {
+        const drop = await prisma.drop.findUnique({
+            where: { id, isActive: true }
+        });
+
+        if (!drop) {
+            throwError(404, 'DROP_NOT_FOUND', 'Drop not found');
+        }
+        return drop;
+    },
+
     async createDrop(title: string, description: string | null, totalSlots: number, claimWindowStart: Date, claimWindowEnd: Date, isActive: boolean = true) {
         if (!title || totalSlots <= 0 || claimWindowStart >= claimWindowEnd) {
             throwError(400, 'INVALID_DROP', 'Invalid drop data')
