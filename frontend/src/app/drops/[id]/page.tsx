@@ -1,16 +1,20 @@
 'use client';
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, BadgeCheckIcon } from "lucide-react";
+import { LeaveButton } from "@/components/LeaveButton";
+import { JoinButton } from "@/components/JoinButton";
 
 export default function DropDetailPage() {
     const { id } = useParams<{ id: string }>();
     const qc = useQueryClient();
+    const router = useRouter();
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ["drop", id],
@@ -46,27 +50,43 @@ export default function DropDetailPage() {
             </main>
         );
     }
-    
+
     const now = new Date();
     const start = new Date(data.claimWindowStart);
     const end = new Date(data.claimWindowEnd);
     const isClaimWindowOpen = now >= start && now <= end;
+    const alreadyJoinedWaitlist = data.waitlists && data.waitlists.length > 0;
 
-    const joinDisabled = join.isPending || isClaimWindowOpen;
+    const joinDisabled = join.isPending || isClaimWindowOpen || alreadyJoinedWaitlist;
     const claimDisabled = claim.isPending || !isClaimWindowOpen;
 
     return (
         <main className="min-h-[80vh] w-full">
             <div className="mx-auto max-w-3xl px-4 py-10">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    onClick={() => router.back()}
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                </Button>
                 <Card className="border-muted-foreground/10 shadow-sm backdrop-blur">
                     <CardHeader className="space-y-2">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-2xl font-semibold tracking-tight">
                                 { data.title }
                             </CardTitle>
-                            <Badge variant={ data.isActive ? "default" : "secondary" }>
-                                { data.isActive ? "Active" : "Inactive" }
-                            </Badge>
+                                { data.isActive && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="bg-green-600 text-white dark:bg-green-400 me-3"
+                                    >
+                                        <BadgeCheckIcon/>
+                                        { data.isActive ? "Active" : "Inactive" }
+                                    </Badge>
+                                ) }
                         </div>
                         <CardDescription className="text-sm">
                             { data.description }
@@ -89,27 +109,26 @@ export default function DropDetailPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
-                            { isClaimWindowOpen ? (
+
+                            { alreadyJoinedWaitlist && (
+                                <div className="rounded-xl bg-blue-50 p-4 text-sm text-muted-foreground">
+                                  <span>You are already on the waitlist.</span>
+                                </div>
+                                )}
+
+                        <div className="rounded-xl bg-red-50 p-4 text-sm text-muted-foreground">
+                            { isClaimWindowOpen && alreadyJoinedWaitlist ? (
                                 <span>Claim window is <span className="font-medium text-foreground">OPEN</span>. You can claim now.</span>
                             ) : now < start ? (
                                 <span>Claim window has <span className="font-medium">not started</span> yet.</span>
                             ) : (
-                                <span>Claim window is <span className="font-medium">closed</span>.</span>
+                                <span>Claim window is already <span className="font-medium">closed</span>. You missed opportunity.</span>
                             ) }
                         </div>
                     </CardContent>
 
                     <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                        <Button
-                            size="lg"
-                            onClick={ () => join.mutate() }
-                            disabled={ joinDisabled }
-                            className="min-w-[140px]"
-                        >
-                            { join.isPending ? "Joining…" : isClaimWindowOpen ? "Join (Closed)" : "Join Waitlist" }
-                        </Button>
-
+                            { join.isPending ? "Joining…" : alreadyJoinedWaitlist ? <LeaveButton dropId={data.id} /> : <JoinButton dropId={data.id} disabled={joinDisabled} />  }
                         <Button
                             size="lg"
                             variant="secondary"
@@ -117,7 +136,7 @@ export default function DropDetailPage() {
                             disabled={ claimDisabled }
                             className="min-w-[140px]"
                         >
-                            { claim.isPending ? "Claiming…" : isClaimWindowOpen ? "Claim" : "Claim (Closed)" }
+                            { claim.isPending ? "Claiming…" : isClaimWindowOpen && alreadyJoinedWaitlist ? "Claim" : "Claim (Closed)" }
                         </Button>
                     </CardFooter>
                 </Card>

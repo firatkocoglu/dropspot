@@ -6,4 +6,7 @@ export type Drop = {
     claimWindowStart: string;
     claimWindowEnd: string;
     isActive: boolean;
+    waitlists: Array<{
+        id: string;
+    }>
 };
