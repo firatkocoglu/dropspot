@@ -1,0 +1,242 @@
+[
+  {
+    "title": "Autumn Launch Drop",
+    "description": "Celebrate the start of autumn with exclusive early-access items.",
+    "totalSlots": 100,
+    "claimWindowStart": "2025-11-10T09:00:00Z",
+    "claimWindowEnd": "2025-11-10T18:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Winter Festival Drop",
+    "description": "Limited-time winter specials to warm up your collection.",
+    "totalSlots": 80,
+    "claimWindowStart": "2025-11-12T10:00:00Z",
+    "claimWindowEnd": "2025-11-12T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Black Friday Madness",
+    "description": "Exclusive Black Friday rewards and mystery items for loyal users.",
+    "totalSlots": 200,
+    "claimWindowStart": "2025-11-25T06:00:00Z",
+    "claimWindowEnd": "2025-11-25T23:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Cyber Monday Special",
+    "description": "Tech-inspired drop with massive digital discounts.",
+    "totalSlots": 180,
+    "claimWindowStart": "2025-12-01T08:00:00Z",
+    "claimWindowEnd": "2025-12-01T22:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Holiday Giveaway",
+    "description": "Festive surprises for our community—only for 24 hours!",
+    "totalSlots": 150,
+    "claimWindowStart": "2025-12-15T09:00:00Z",
+    "claimWindowEnd": "2025-12-15T17:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "New Year Celebration",
+    "description": "Ring in the new year with a premium limited edition drop.",
+    "totalSlots": 120,
+    "claimWindowStart": "2025-12-31T08:00:00Z",
+    "claimWindowEnd": "2026-01-01T02:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "January Boost Drop",
+    "description": "Kick off your resolutions with fresh content and energy.",
+    "totalSlots": 90,
+    "claimWindowStart": "2026-01-05T09:00:00Z",
+    "claimWindowEnd": "2026-01-05T17:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Winter Tech Drop",
+    "description": "Gadgets and cool winter-themed collectibles await you.",
+    "totalSlots": 110,
+    "claimWindowStart": "2026-01-10T07:00:00Z",
+    "claimWindowEnd": "2026-01-10T16:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Valentine’s Limited Edition",
+    "description": "A romantic-themed drop featuring exclusive Valentine gear.",
+    "totalSlots": 60,
+    "claimWindowStart": "2026-02-14T09:00:00Z",
+    "claimWindowEnd": "2026-02-14T23:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Spring Kickoff Drop",
+    "description": "Welcome spring with a colorful set of rare items.",
+    "totalSlots": 130,
+    "claimWindowStart": "2026-03-01T08:00:00Z",
+    "claimWindowEnd": "2026-03-01T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "March Madness",
+    "description": "Competitive season starts now—claim your gear early.",
+    "totalSlots": 160,
+    "claimWindowStart": "2026-03-10T09:00:00Z",
+    "claimWindowEnd": "2026-03-10T19:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "April Limited Drop",
+    "description": "Minimalist design meets powerful exclusivity.",
+    "totalSlots": 75,
+    "claimWindowStart": "2026-04-02T10:00:00Z",
+    "claimWindowEnd": "2026-04-02T18:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Easter Special",
+    "description": "Egg-themed collectibles and surprises for the season.",
+    "totalSlots": 100,
+    "claimWindowStart": "2026-04-12T07:00:00Z",
+    "claimWindowEnd": "2026-04-12T17:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "May Fresh Collection",
+    "description": "Refreshing spring vibes in limited quantities.",
+    "totalSlots": 140,
+    "claimWindowStart": "2026-05-01T08:00:00Z",
+    "claimWindowEnd": "2026-05-01T22:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Summer Warmup Drop",
+    "description": "Heat up your inventory with this pre-summer release.",
+    "totalSlots": 95,
+    "claimWindowStart": "2026-05-20T09:00:00Z",
+    "claimWindowEnd": "2026-05-20T17:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "June Solstice Drop",
+    "description": "Celebrate the longest day of the year with something rare.",
+    "totalSlots": 125,
+    "claimWindowStart": "2026-06-21T06:00:00Z",
+    "claimWindowEnd": "2026-06-21T23:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Independence Day Drop",
+    "description": "Limited patriotic edition for the July 4th spirit.",
+    "totalSlots": 170,
+    "claimWindowStart": "2026-07-04T07:00:00Z",
+    "claimWindowEnd": "2026-07-04T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Summer Splash Giveaway",
+    "description": "Stay cool with our fun and refreshing summer-themed drop.",
+    "totalSlots": 80,
+    "claimWindowStart": "2026-07-18T09:00:00Z",
+    "claimWindowEnd": "2026-07-18T19:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Back to School Drop",
+    "description": "Smart essentials for a sharp return to routine.",
+    "totalSlots": 150,
+    "claimWindowStart": "2026-08-20T08:00:00Z",
+    "claimWindowEnd": "2026-08-20T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Autumn Early Access",
+    "description": "Exclusive access for early autumn collectors.",
+    "totalSlots": 90,
+    "claimWindowStart": "2026-09-05T09:00:00Z",
+    "claimWindowEnd": "2026-09-05T18:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "September Spotlight",
+    "description": "A spotlight event featuring top-rated community items.",
+    "totalSlots": 70,
+    "claimWindowStart": "2026-09-25T10:00:00Z",
+    "claimWindowEnd": "2026-09-25T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "October Harvest Drop",
+    "description": "Autumn harvest season meets rare premium rewards.",
+    "totalSlots": 180,
+    "claimWindowStart": "2026-10-10T09:00:00Z",
+    "claimWindowEnd": "2026-10-10T21:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Halloween Special Edition",
+    "description": "Spooky limited-edition collectibles—trick or treat?",
+    "totalSlots": 100,
+    "claimWindowStart": "2026-10-31T08:00:00Z",
+    "claimWindowEnd": "2026-10-31T23:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "November Warmup Drop",
+    "description": "Transition into winter with exclusive pre-season items.",
+    "totalSlots": 110,
+    "claimWindowStart": "2026-11-10T09:00:00Z",
+    "claimWindowEnd": "2026-11-10T17:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Pre-Holiday Drop",
+    "description": "Early holiday gifts before the rush begins.",
+    "totalSlots": 130,
+    "claimWindowStart": "2026-11-25T07:00:00Z",
+    "claimWindowEnd": "2026-11-25T19:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Winter Early Bird",
+    "description": "Exclusive early-bird rewards for the first claimers.",
+    "totalSlots": 160,
+    "claimWindowStart": "2026-12-05T09:00:00Z",
+    "claimWindowEnd": "2026-12-05T21:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "Holiday Mega Drop",
+    "description": "Our biggest holiday giveaway packed with surprises.",
+    "totalSlots": 190,
+    "claimWindowStart": "2026-12-20T08:00:00Z",
+    "claimWindowEnd": "2026-12-20T22:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "New Year Limited Series",
+    "description": "Exclusive collection to kick off the new year in style.",
+    "totalSlots": 200,
+    "claimWindowStart": "2026-12-31T10:00:00Z",
+    "claimWindowEnd": "2027-01-01T03:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "January Warmup Drop",
+    "description": "Start the year with a warm and exciting set of items.",
+    "totalSlots": 150,
+    "claimWindowStart": "2027-01-10T08:00:00Z",
+    "claimWindowEnd": "2027-01-10T20:00:00Z",
+    "isActive": true
+  },
+  {
+    "title": "February Freeze Giveaway",
+    "description": "Cool down the winter with frosty collectibles.",
+    "totalSlots": 90,
+    "claimWindowStart": "2027-02-05T09:00:00Z",
+    "claimWindowEnd": "2027-02-05T18:00:00Z",
+    "isActive": true
+  }
+]

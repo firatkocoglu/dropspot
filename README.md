@@ -2,6 +2,7 @@
 
 **Project Start Time: 2025-11-04 18:00**
 **Please see the end of this README file for screenshots**
+See screenshots → [Screenshots](#-screenshots)
 
 Full-stack case project for Alpaco — limited-stock and waitlist platform built with Express, Prisma, PostgreSQL, and Next.js.
 
