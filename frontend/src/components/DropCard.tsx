@@ -1,52 +1,19 @@
 'use client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/apiClient";
-import { toast } from "sonner";
 import type { Drop } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { BadgeCheckIcon, ScrollText } from "lucide-react";
-import { ClaimButton } from "@/components/ClaimButton";
-import { JoinButton } from "@/components/JoinButton";
-import { LeaveButton } from "@/components/LeaveButton";
-import { useEffect, useState } from "react";
-
 
 export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowEnd, isActive, waitlists }: Drop) {
-    const qc = useQueryClient();
     const router = useRouter();
-
-    useEffect(() => {
-        claim.mutate();
-    }, []);
 
     const now = new Date();
     const windowStart = new Date(claimWindowStart);
     const windowEnd = new Date(claimWindowEnd);
     const isClaimWindowOpen = now >= windowStart && now <= windowEnd;
-    const isClaimWindowClosed = now > windowEnd;
     const joinedWaitlist = waitlists && waitlists.length > 0;
-
-    // Join mutation
-    const join = useMutation({
-        mutationFn: async () => api.post(`/drops/${ id }/join`),
-        onSuccess: () => {
-            toast.success("Joined waitlist");
-            qc.invalidateQueries({ queryKey: ["drops"] });
-        },
-        onError: (err: any) => toast.error(err?.response?.data?.message ?? "Join failed"),
-    });
-
-    //  Claim mutation
-    const [claimCode, setClaimCode] = useState<string | null>(null);
-    const claim = useMutation({
-        mutationFn: async () => (await api.post(`/drops/${ id }/claim`)).data,
-        onSuccess: (res) =>  setClaimCode(res.code)
-    });
-
-
 
     return (
         <Card
@@ -87,14 +54,17 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
                         <ScrollText /> { "Claims" }
                     </Badge>
                 )}
-
             </CardContent>
-
             <CardFooter className="flex gap-2">
-                {joinedWaitlist ? <LeaveButton dropId={ id } disabled={isClaimWindowClosed || claimCode} /> :
-                <JoinButton dropId={ id } disabled={ join.isPending || isClaimWindowOpen } /> }
-                <ClaimButton dropId={ id } disabled={ claim.isPending || !joinedWaitlist }/>
-
+                <Button
+                    variant="secondary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/drops/${id}`);
+                    }}
+                >
+                    View Details
+                </Button>
             </CardFooter>
         </Card>
     );

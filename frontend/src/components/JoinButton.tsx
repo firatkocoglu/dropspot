@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 
 type JoinButtonProps = {
     dropId: string;
-    disabled?: boolean; // örneğin claim window açıksa dışarıdan disable edebilirsin
-    onJoined?: () => void; // opsiyonel callback
+    disabled?: boolean;
+    onJoined?: () => void;
     className?: string;
 };
 

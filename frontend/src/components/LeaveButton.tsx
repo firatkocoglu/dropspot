@@ -11,7 +11,6 @@ export function LeaveButton({ dropId, disabled }: { dropId: string, disabled?: b
         mutationFn: async () => api.post(`/drops/${dropId}/leave`),
         onSuccess: () => {
             toast.success("You have left the waitlist");
-            // drop veya drops listesini yeniden yükle
             qc.invalidateQueries({ queryKey: ["drop", dropId] });
             qc.invalidateQueries({ queryKey: ["drops"] });
         },

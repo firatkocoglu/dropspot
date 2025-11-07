@@ -1,7 +1,6 @@
 'use client';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/apiClient';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useRouter } from "next/navigation";
 
@@ -23,7 +22,7 @@ export function ClaimButton({ dropId, disabled }: { dropId: string, disabled?: b
             e.stopPropagation();
             claim.mutate();
         }}
-        disabled={claim.isPending || disabled}
+        disabled={disabled || claim.isPending}
         className="text-white bg-violet-400 hover:bg-violet-300 focus:ring-4 focus:ring-blue-300"
         >
              { claim.isPending ? 'Claiming…' : 'Claim' }

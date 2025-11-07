@@ -33,36 +33,7 @@ export const ClaimService = {
             const remaining = drop.totalSlots - usedCount;
             if (remaining <= 0) throwError(409, 'SOLD_OUT', 'Capacity exceeded')
 
-            /**
-             * Ensure the user is eligible to claim
-             * Only the first 'remaining' users in the waitlist by priorityScore and joinedAt are eligible
-             * Here remaining is the number of slots left
-             **/
-            // const topN = await tx.waitlist.findMany({
-            //     where: {dropId},
-            //     orderBy: [{priorityScore: 'desc'}, {joinedAt: 'asc'}, {id: 'asc'}],
-            //     take: remaining,
-            //     select: {userId: true, priorityScore: true}
-            // })
-            //
-            // const eligible = topN.some(eligible => eligible.userId === userId);
-            // if (!eligible) throwError(409, 'NOT_ELIGIBLE', 'User is not eligible to claim')
 
-            // // Ensure user has not already claimed
-            // const existingClaim = await tx.claim.findUnique(
-            //     {
-            //         where: {userId_dropId: {userId, dropId}},
-            //     }
-            // )
-            // if (existingClaim?.status === 'USED') throwError(409, 'ALREADY_CLAIMED', 'User has already claimed')
-
-            // Finalize the claim
-            /**
-             * Since we're asked to handle claim in just one endpoint
-             * we'll just create a crypto-based cod and accept the code as valid
-             * For idempotency concerns; I use upsert to ensure that the user can only claim once.
-             * Attempting to claim again will just return the existing claim with status USED
-             **/
             const code = generateClaimCode()
             const claim = await tx.claim.upsert({
                 where: {userId_dropId: {userId, dropId}},

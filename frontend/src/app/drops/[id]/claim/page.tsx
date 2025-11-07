@@ -179,9 +179,16 @@ export default function ClaimPage() {
                     </CardContent>
 
                     <CardFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
-                        <ClaimButton dropId={ id } disabled={!isClaimWindowOpen || !joined }
-                                     onClick={() => claim.mutate()}
-                            />
+                        <Button
+                            size="lg"
+                            onClick={() => claim.mutate()}
+                            disabled={claim.isPending}
+                            className="text-white bg-violet-400 hover:bg-violet-300 focus:ring-4 focus:ring-blue-300"
+
+                        >
+                            {claim.isPending ? "Claiming..." : "Claim"}
+                        </Button>
+
 
                         <Button size="lg" variant="ghost" onClick={() => router.push(`/drops/${id}`)}>
                             Go to detail

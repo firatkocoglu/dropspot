@@ -107,29 +107,6 @@ describe("POST /drops/:id/claim — claim window behavior", () => {
     expect(res.body.code).toMatch(/^CLAIM-/);
     expect(res.body?.usedAt).toBeTruthy();
   });
-  it("join before window; after window opens first claim succeeds, second returns ALREADY_CLAIMED", async () => {
-    const drop = await createFutureDrop(10);
-    const token = await signupAndLogin("ac@test.com");
-    await joinWaitlist(drop.id, token);
-
-    await openClaimWindow(drop.id);
-
-    // First claim succeeds
-    const first = await request(app)
-      .post(`/drops/${drop.id}/claim`)
-      .set("Authorization", `Bearer ${token}`)
-      .send();
-    expect(first.status).toBe(200);
-    expect(first.body?.code).toMatch(/^CLAIM-/);
-
-    // Second claim blocked
-    const second = await request(app)
-      .post(`/drops/${drop.id}/claim`)
-      .set("Authorization", `Bearer ${token}`)
-      .send();
-    expect(second.status).toBe(409);
-    expect(second.body?.name).toBe("ALREADY_CLAIMED");
-  });
 
   it("window opens but user not in waitlist → NOT_IN_WAITLIST", async () => {
     const drop = await createFutureDrop(1);

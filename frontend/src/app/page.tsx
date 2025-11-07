@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { DropCard } from "@/components/DropCard";
 import { LogoutButton } from "@/components/LogoutButton";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AdminPanelButton } from "@/components/AdminPanelButton";
 
 export default function HomePage() {
