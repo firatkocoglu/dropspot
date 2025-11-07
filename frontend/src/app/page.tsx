@@ -4,8 +4,20 @@ import { api } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { DropCard } from "@/components/DropCard";
 import { LogoutButton } from "@/components/LogoutButton";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HomePage() {
+    const router = useRouter();
+
+    // Redirect to login if not logged in
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+            router.replace("/login");
+        }
+    }, [router]);
+
     const { data, isLoading, isError } = useQuery({
         queryKey: ["drops"],
         queryFn: async () => (await api.get("/drops")).data,

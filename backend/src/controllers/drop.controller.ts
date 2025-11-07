@@ -1,14 +1,16 @@
-import {DropService} from "@/services/drop.service";
-import {Request, Response} from "express";
+import { DropService } from "@/services/drop.service";
+import { Request, Response } from "express";
 
 export const DropController = {
     async listActive(req: Request, res: Response) {
-        const result = await DropService.listActive();
+        const userId = (req as any).user.id;
+        const result = await DropService.listActive(userId);
         return res.status(200).json(result);
     },
 
     async retrieve(req: Request, res: Response) {
-        const result = await DropService.retrieve(req.params.id);
+        const userId = (req as any).user.id;
+        const result = await DropService.retrieve(req.params.id, userId);
         return res.status(200).json(result);
     },
 
@@ -42,7 +44,7 @@ export const DropController = {
             claimWindowStart: Date;
             claimWindowEnd: Date;
             isActive: boolean;
-        }>
+        }>;
 
         const updated = await DropService.updateDrop(id, patch);
         return res.status(200).json(updated);
@@ -53,4 +55,4 @@ export const DropController = {
         await DropService.deleteDrop(id);
         return res.status(204).end();
     }
-}
+};

@@ -6,9 +6,14 @@ import { api } from "@/lib/apiClient";
 import { toast } from "sonner";
 import type { Drop } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { BadgeCheckIcon, ScrollText } from "lucide-react";
+import { ClaimButton } from "@/components/ClaimButton";
+import { JoinButton } from "@/components/JoinButton";
+import { LeaveButton } from "@/components/LeaveButton";
 
 
-export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowEnd, isActive }: Drop) {
+export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowEnd, isActive, waitlists }: Drop) {
     const qc = useQueryClient();
     const router = useRouter();
 
@@ -16,6 +21,7 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
     const windowStart = new Date(claimWindowStart);
     const windowEnd = new Date(claimWindowEnd);
     const isClaimWindowOpen = now >= windowStart && now <= windowEnd;
+    const alreadyJoinedWaitlist = waitlists && waitlists.length > 0;
 
     // Join mutation
     const join = useMutation({
@@ -44,42 +50,43 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
                 <CardDescription className="space-y-1">
                     <div className="text-sm">Total slots: { totalSlots }</div>
                     <div className="text-xs">
-                        Claim window: { windowStart.toLocaleString() } → { windowEnd.toLocaleString() }
+                         {isClaimWindowOpen ? `Claims are currently open until: ${ windowEnd.toLocaleString() }` :  `Claim window: ${ windowStart.toLocaleString() } → ${ windowEnd.toLocaleString() }`}
                     </div>
                 </CardDescription>
             </CardHeader>
 
             <CardContent>
-                <span className="text-xs">{ isActive ? "Active" : "Inactive" }</span>
+                <Badge
+                    variant="secondary"
+                    className="bg-green-600 text-white dark:bg-green-400 me-3"
+                >
+                    <BadgeCheckIcon/>
+                    { isActive ? "Active" : "Inactive" }
+                </Badge>
+                { alreadyJoinedWaitlist && (
+                    <Badge
+                        variant="secondary"
+                        className="bg-blue-500 text-white dark:bg-blue-600 me-3"
+                    >
+                        <BadgeCheckIcon/> { "Joined Waitlist " }
+                    </Badge>
+                ) }
+                { isClaimWindowOpen &&  (
+                    <Badge
+                        variant="secondary"
+                        className="bg-violet-400 text-white dark:bg-blue-600"
+                    >
+                        <ScrollText /> { "Claims" }
+                    </Badge>
+                )}
+
             </CardContent>
 
             <CardFooter className="flex gap-2">
-                {/* 🧍 Join Waitlist */ }
-                <Button
-                    size="sm"
-                    onClick={ () => join.mutate() }
-                    disabled={ join.isPending || isClaimWindowOpen }
-                >
-                    { join.isPending
-                        ? "Joining…"
-                        : isClaimWindowOpen
-                            ? "Join (Closed)"
-                            : "Join" }
-                </Button>
+                {alreadyJoinedWaitlist ? <LeaveButton dropId={ id } /> :
+                <JoinButton dropId={ id } disabled={ join.isPending || isClaimWindowOpen } /> }
+                <ClaimButton dropId={ id } disabled={ claim.isPending || !isClaimWindowOpen } />
 
-                {/* Claim */ }
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={ () => claim.mutate() }
-                    disabled={ !isClaimWindowOpen || claim.isPending }
-                >
-                    { claim.isPending
-                        ? "Claiming…"
-                        : isClaimWindowOpen
-                            ? "Claim"
-                            : "Claim (Closed)" }
-                </Button>
             </CardFooter>
         </Card>
     );
