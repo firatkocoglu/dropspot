@@ -3,8 +3,8 @@ import {AuthService} from "@/services/auth.service";
 
 export const AuthController = {
     async signup(req: Request, res: Response) {
-        const { email, password } = req.body;
-        const result = await AuthService.signup(email, password);
+        const { email, password, isAdmin } = req.body;
+        const result = await AuthService.signup(email, password, isAdmin);
         res.cookie('refresh-token', result.refreshToken, {
             httpOnly: true,
             secure: false,

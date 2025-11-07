@@ -10,7 +10,7 @@ import {redis} from "@/utils/redis";
 const prisma = new PrismaClient();
 
 export const AuthService = {
-    async signup(emailRaw: string, password: string) {
+    async signup(emailRaw: string, password: string, isAdmin: boolean) {
         const email = emailRaw.trim().toLowerCase();
 
         // Check if email is already taken
@@ -28,7 +28,7 @@ export const AuthService = {
 
         // Create the user in the database
         const newUser = await prisma.user.create({
-           data: { email, passwordHash, role: 'USER' },
+           data: { email, passwordHash, role: isAdmin ? 'ADMIN' : 'USER' },
         });
 
         // Generate JWT tokens

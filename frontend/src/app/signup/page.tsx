@@ -22,13 +22,14 @@ export default function SignupPage() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
     const [pending, setPending] = useState(false);
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         try {
             setPending(true);
-            await api.post("/auth/signup", { email, password });
+            await api.post("/auth/signup", { email, password, isAdmin });
             const { data } = await api.post("/auth/login", { email, password });
             localStorage.setItem("accessToken", data.accessToken);
             toast.success("Account created!");
@@ -73,6 +74,17 @@ export default function SignupPage() {
                                 placeholder="Min 6 characters"
                             />
                         </div>
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                name="isAdmin"
+                                checked={isAdmin}
+                                onChange={(e) => setIsAdmin(e.target.checked)}
+                                className="checkbox"
+                            />
+                            <span>Register as Admin</span>
+                        </label>
+
                         <Button type="submit" className="w-full" disabled={pending}>
                             {pending ? "Creating…" : "Create account"}
                         </Button>
