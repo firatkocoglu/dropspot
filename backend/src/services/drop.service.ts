@@ -7,7 +7,7 @@ export const DropService = {
     async listActive(userId: string) {
         const drops = await prisma.drop.findMany({
             where: { isActive: true },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'asc' },
             select: {
                 id: true,
                 title: true,

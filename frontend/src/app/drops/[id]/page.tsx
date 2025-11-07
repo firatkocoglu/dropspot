@@ -18,8 +18,6 @@ export default function DropDetailPage() {
     const qc = useQueryClient();
     const router = useRouter();
 
-
-
     const { data, isLoading, isError } = useQuery({
         queryKey: ["drop", id],
         queryFn: async () => (await api.get(`/drops/${ id }`)).data,
