@@ -6,10 +6,10 @@ import { DropCard } from "@/components/DropCard";
 import { LogoutButton } from "@/components/LogoutButton";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AdminPanelButton } from "@/components/AdminPanelButton";
 
 export default function HomePage() {
     const router = useRouter();
-
     // Redirect to login if not logged in
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
@@ -29,13 +29,14 @@ export default function HomePage() {
         return null;
     }
 
-    console.log(data);
-
     return (
         <main className="container mx-auto p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-xl font-semibold">Drops</h1>
-                <LogoutButton/>
+                <div className="flex items-center gap-3">
+                    <AdminPanelButton />
+                     <LogoutButton />
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
