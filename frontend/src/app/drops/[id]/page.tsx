@@ -10,11 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, BadgeCheckIcon } from "lucide-react";
 import { LeaveButton } from "@/components/LeaveButton";
 import { JoinButton } from "@/components/JoinButton";
+import { ClaimButton } from "@/components/ClaimButton";
+import { useEffect, useState } from "react";
 
 export default function DropDetailPage() {
     const { id } = useParams<{ id: string }>();
     const qc = useQueryClient();
     const router = useRouter();
+
+
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ["drop", id],
@@ -30,11 +34,15 @@ export default function DropDetailPage() {
         onError: (err: any) => toast.error(err?.response?.data?.message ?? "Join failed"),
     });
 
+    const [claimCode, setClaimCode] = useState<string | null>(null);
     const claim = useMutation({
         mutationFn: async () => (await api.post(`/drops/${ id }/claim`)).data,
-        onSuccess: (res) => toast.success(`Your code: ${ res.code }`),
-        onError: (err: any) => toast.error(err?.response?.data?.message ?? "Claim failed"),
+        onSuccess: (res) =>  setClaimCode(res.code)
     });
+
+    useEffect(() => {
+        claim.mutate();
+    }, []);
 
     if ( isLoading ) {
         return (
@@ -55,10 +63,10 @@ export default function DropDetailPage() {
     const start = new Date(data.claimWindowStart);
     const end = new Date(data.claimWindowEnd);
     const isClaimWindowOpen = now >= start && now <= end;
-    const alreadyJoinedWaitlist = data.waitlists && data.waitlists.length > 0;
+    const joinedWaitlist = data.waitlists && data.waitlists.length > 0;
 
-    const joinDisabled = join.isPending || isClaimWindowOpen || alreadyJoinedWaitlist;
-    const claimDisabled = claim.isPending || !isClaimWindowOpen;
+    const joinDisabled = join.isPending || isClaimWindowOpen || joinedWaitlist;
+    const claimDisabled = claim.isPending || !joinedWaitlist;
 
     return (
         <main className="min-h-[80vh] w-full">
@@ -67,7 +75,7 @@ export default function DropDetailPage() {
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                    onClick={() => router.back()}
+                    onClick={() => router.push('/')}
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back
@@ -110,14 +118,14 @@ export default function DropDetailPage() {
                         </div>
 
 
-                            { alreadyJoinedWaitlist && (
+                            { joinedWaitlist && (
                                 <div className="rounded-xl bg-blue-50 p-4 text-sm text-muted-foreground">
-                                  <span>You are already on the waitlist.</span>
+                                  <span>You are on the waitlist.</span>
                                 </div>
                                 )}
 
                         <div className="rounded-xl bg-red-50 p-4 text-sm text-muted-foreground">
-                            { isClaimWindowOpen && alreadyJoinedWaitlist ? (
+                            { isClaimWindowOpen && joinedWaitlist ? (
                                 <span>Claim window is <span className="font-medium text-foreground">OPEN</span>. You can claim now.</span>
                             ) : now < start ? (
                                 <span>Claim window has <span className="font-medium">not started</span> yet.</span>
@@ -128,16 +136,8 @@ export default function DropDetailPage() {
                     </CardContent>
 
                     <CardFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                            { join.isPending ? "Joining…" : alreadyJoinedWaitlist ? <LeaveButton dropId={data.id} /> : <JoinButton dropId={data.id} disabled={joinDisabled} />  }
-                        <Button
-                            size="lg"
-                            variant="secondary"
-                            onClick={ () => claim.mutate() }
-                            disabled={ claimDisabled }
-                            className="min-w-[140px]"
-                        >
-                            { claim.isPending ? "Claiming…" : isClaimWindowOpen && alreadyJoinedWaitlist ? "Claim" : "Claim (Closed)" }
-                        </Button>
+                            { join.isPending ? "Joining…" : joinedWaitlist ? <LeaveButton dropId={data.id} disabled={claimCode} /> : <JoinButton dropId={data.id} disabled={joinDisabled} />  }
+                            <ClaimButton dropId={data.id} disabled={claimDisabled} />
                     </CardFooter>
                 </Card>
             </div>

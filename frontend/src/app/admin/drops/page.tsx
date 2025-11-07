@@ -72,6 +72,7 @@ export default function AdminDropsPage() {
     });
 
     // ------- Update (inline per-row)
+
     const updateMut = useMutation({
         mutationFn: async (payload: Partial<Drop> & { id: string }) =>
             api.patch(`/drops/${payload.id}`, {

@@ -4,7 +4,7 @@ import { api } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export function LeaveButton({ dropId }: { dropId: string }) {
+export function LeaveButton({ dropId, disabled }: { dropId: string, disabled?: boolean }) {
     const qc = useQueryClient();
 
     const leave = useMutation({
@@ -25,7 +25,7 @@ export function LeaveButton({ dropId }: { dropId: string }) {
             onClick={(e) => {
                 e.stopPropagation();
                 leave.mutate()}}
-            disabled={leave.isPending}
+            disabled={leave.isPending || disabled }
             className="min-w-[140px]"
         >
             {leave.isPending ? "Leaving…" : "Leave Waitlist"}

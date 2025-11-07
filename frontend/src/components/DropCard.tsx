@@ -11,17 +11,23 @@ import { BadgeCheckIcon, ScrollText } from "lucide-react";
 import { ClaimButton } from "@/components/ClaimButton";
 import { JoinButton } from "@/components/JoinButton";
 import { LeaveButton } from "@/components/LeaveButton";
+import { useEffect, useState } from "react";
 
 
 export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowEnd, isActive, waitlists }: Drop) {
     const qc = useQueryClient();
     const router = useRouter();
 
+    useEffect(() => {
+        claim.mutate();
+    }, []);
+
     const now = new Date();
     const windowStart = new Date(claimWindowStart);
     const windowEnd = new Date(claimWindowEnd);
     const isClaimWindowOpen = now >= windowStart && now <= windowEnd;
-    const alreadyJoinedWaitlist = waitlists && waitlists.length > 0;
+    const isClaimWindowClosed = now > windowEnd;
+    const joinedWaitlist = waitlists && waitlists.length > 0;
 
     // Join mutation
     const join = useMutation({
@@ -34,11 +40,13 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
     });
 
     //  Claim mutation
+    const [claimCode, setClaimCode] = useState<string | null>(null);
     const claim = useMutation({
         mutationFn: async () => (await api.post(`/drops/${ id }/claim`)).data,
-        onSuccess: (res) => toast.success(`Your code: ${ res.code }`),
-        onError: (err: any) => toast.error(err?.response?.data?.message ?? "Claim failed"),
+        onSuccess: (res) =>  setClaimCode(res.code)
     });
+
+
 
     return (
         <Card
@@ -63,7 +71,7 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
                     <BadgeCheckIcon/>
                     { isActive ? "Active" : "Inactive" }
                 </Badge>
-                { alreadyJoinedWaitlist && (
+                { joinedWaitlist && (
                     <Badge
                         variant="secondary"
                         className="bg-blue-500 text-white dark:bg-blue-600 me-3"
@@ -83,9 +91,9 @@ export function DropCard({ id, title, totalSlots, claimWindowStart, claimWindowE
             </CardContent>
 
             <CardFooter className="flex gap-2">
-                {alreadyJoinedWaitlist ? <LeaveButton dropId={ id } /> :
+                {joinedWaitlist ? <LeaveButton dropId={ id } disabled={isClaimWindowClosed || claimCode} /> :
                 <JoinButton dropId={ id } disabled={ join.isPending || isClaimWindowOpen } /> }
-                <ClaimButton dropId={ id } disabled={ claim.isPending || !isClaimWindowOpen } />
+                <ClaimButton dropId={ id } disabled={ claim.isPending || !joinedWaitlist }/>
 
             </CardFooter>
         </Card>
