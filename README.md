@@ -1,6 +1,7 @@
 # DropSpot — Full-Stack Case
 
 **Project Start Time: 2025-11-04 18:00**
+**Please see the end of this README file for screenshots**
 
 Full-stack case project for Alpaco — limited-stock and waitlist platform built with Express, Prisma, PostgreSQL, and Next.js.
 
@@ -127,36 +128,50 @@ tests/
 ### Endpoints and CRUD Operations
 
 ### Public (Browse)
-| Method | Path | Auth | Description | Notes |
-|---|---|---|---|---|
-| GET | `/drops` | ❌ | List active drops | Query: paging/sort (optional) |
+| Method | Path        | Description | Notes |
+|---|-------------|--|---|---|
+| GET | `/drops`    |   List active drops | Query: paging/sort (optional) |
+| GET | `/drops:id` | List a | Query: paging/sort (optional) |
 
-### Auth
-| Method | Path | Auth | Description | Body (min) | Response (min) | Idempotency / Notes |
-|---|---|---|---|---|---|---|
-| POST | `/auth/signup` | ❌ | Create user | `{ email, password }` | `{ accessToken, user }` + HttpOnly refresh cookie | Creating same email → 409 |
-| POST | `/auth/login` | ❌ | Login | `{ email, password }` | `{ accessToken, user }` + HttpOnly refresh cookie | Wrong credentials → 401 |
-| POST | `/auth/logout` | ✅ | Logout current session | — | `204 No Content` | Access token blacklisted, refresh revoked |
-| POST | `/auth/refresh` | (Cookie) | Rotate tokens | — (HttpOnly refresh cookie) | `{ accessToken }` (rotated) | Session revoked/expired → 401 |
 
-### Admin — Drop CRUD
-| Method | Path | Auth | Description | Body (min) | Response (min) | Idempotency / Notes |
-|---|---|---|---|---|---|--|
-| GET | `/admin/drops` | ✅ Admin | List all drops (admin) | — | `Drop[]` |  |
-| POST | `/admin/drops` | ✅ Admin | **Create drop** | `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` |  |
-| PUT | `/admin/drops/:id` | ✅ Admin | **Update drop** | Any of: `{ title, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop` | Validates window range and slot consistency |
-| DELETE | `/admin/drops/:id` | ✅ Admin | **Delete drop** | — | `204 No Content` | Cascades to dependent rows |
 
-### Waitlist
-| Method | Path | Auth | Description | Body | Response | Idempotency / Notes |
-|---|---|---|---|---|---|---|
-| POST | `/drops/:id/join` | ✅ | Join waitlist | — | `200 OK` (entry created) | `@@unique([userId,dropId])` → repeated joins safe (no duplicates) |
-| POST | `/drops/:id/leave` | ✅ | Leave waitlist | — | `204 No Content` (or `200`) | If not joined → `409 NOT_IN_WAITLIST` |
+#### Public (Browse)
+| Method | Path            | Description            | Query (optional)                  | Response (min) |
+|-------:|-----------------|------------------------|-----------------------------------|----------------|
+| GET    | `/drops`        | List active drops      | `page, limit, sort`               | `Drop[]`       |
+| GET    | `/drops/:id`    | Get drop detail        | —                                 | `Drop` (+ user context if authed) |
 
-### Claim
-| Method | Path | Auth | Description | Body | Response | Idempotency / Notes |
-|---|---|---|---|---|---|---|
-| POST | `/drops/:id/claim` | ✅ | Claim within window | — | `200 { code, issuedAt, usedAt? }` | Transactional operation with Drop row lock; returns `409` for `SOLD_OUT`, `ALREADY_CLAIMED`, `NOT_IN_WAITLIST`, or `CLAIM_WINDOW_CLOSED`. |
+
+#### Auth
+| Method | Path            | Description        | Body (min)                         | Response (min)                           | Idempotency / Notes                                      |
+|-------:|-----------------|--------------------|------------------------------------|-------------------------------------------|----------------------------------------------------------|
+| POST   | `/auth/signup`  | Create user        | `{ email, password, name?, isAdmin? }` | `{ accessToken, user }` + HttpOnly refresh cookie | Duplicate email → `409 CONFLICT`                         |
+| POST   | `/auth/login`   | Login              | `{ email, password }`              | `{ accessToken, user }` + HttpOnly refresh cookie | Wrong credentials → `401 UNAUTHORIZED`                   |
+| POST   | `/auth/logout`  | Logout session     | —                                  | `204 No Content`                          | Access token blacklisted, refresh session revoked        |
+| POST   | `/auth/refresh` | Rotate tokens      | — (HttpOnly refresh cookie)        | `{ accessToken }`                          | Revoked/expired session → `401 UNAUTHORIZED`             |
+
+
+#### Admin — Drop CRUD
+| Method | Path                 | Auth     | Description     | Body (min)                                                              | Response (min) | Notes                                      |
+|-------:|----------------------|----------|-----------------|-------------------------------------------------------------------------|----------------|--------------------------------------------|
+| GET    | `/admin/drops`       | ✅ Admin | List all drops  | —                                                                       | `Drop[]`       |                                            |
+| POST   | `/admin/drops`       | ✅ Admin | Create drop     | `{ title, description?, totalSlots, claimWindowStart, claimWindowEnd, isActive }` | `Drop`         | Validates window range                      |
+| PATCH  | `/admin/drops/:id`   | ✅ Admin | Update drop     | Any subset of create fields                                             | `Drop`         | Keeps invariants (window range, slots)     |
+| DELETE | `/admin/drops/:id`   | ✅ Admin | Delete drop     | —                                                                       | `204 No Content` | Cascades to dependent rows (claims/waitlists) |
+
+
+#### Waitlist
+| Method | Path               | Description       | Body | Response (min)                          | Idempotency / Notes                                             |
+|-------:|--------------------|-------------------|------|-----------------------------------------|-----------------------------------------------------------------|
+| POST   | `/drops/:id/join`  | Join waitlist     | —    | `200 OK` (`{ joined: true, priorityScore }` optional) | `@@unique([userId, dropId])` → safe to repeat (no duplicates)   |
+| POST   | `/drops/:id/leave` | Leave waitlist    | —    | `204 No Content`                         | Not joined → `409 NOT_IN_WAITLIST`; has claim → `409 HAS_CLAIM` |
+
+
+#### Claim
+| Method | Path                 | Description            | Body | Response (min)                         | Idempotency / Notes                                                                 |
+|-------:|----------------------|------------------------|------|----------------------------------------|-------------------------------------------------------------------------------------|
+| POST   | `/drops/:id/claim`   | Claim within window    | —    | `200 { code, status: "ISSUED", issuedAt }` | **Idempotent**: if user already has a claim, returns the **same code** with `alreadyHad: true`. Window closed / not in waitlist / sold out (for new claims) → `409`. |
+| GET    | `/drops/:id/claim-status` *(optional)* | Check if user has claim | —    | `200 { hasClaim: boolean }`            | Lightweight probe for UI; does **not** create a claim                                |
 
 ### Architecture and Logic Breakdown
 
@@ -286,3 +301,107 @@ priorityScore = (A % userOrder) + (B % accountAgeDays) - (C % totalWaitlistsJoin
 > This keeps the system fair and reproducible (no lotteries), while still preventing simple gaming strategies (e.g., mass‑joining many waitlists).
 
 ---
+
+## 🖥️ Frontend Overview
+
+**Tech Stack**  
+• Framework: **Next.js 15 (App Router)**  
+• Language: **TypeScript + React 19**  
+• UI Library: **shadcn/ui + TailwindCSS + Sonner**  
+• State / Server sync: **TanStack Query (React Query)**  
+• Tests: **Vitest + React Testing Library (RTL)**
+
+---
+
+### 🧱 Architecture
+```
+frontend/
+├── src/
+│   ├── app/               # Next.js app router structure
+│   │   ├── drops/         # Drop list & detail pages
+│   │   ├── login/         # Login page
+│   │   ├── signup/        # Signup page
+│   │   ├── admin/         # Admin dashboard
+│   │   └── layout.tsx     # Global layout (Sonner + QueryClientProvider)
+│   ├── components/        # UI components (DropCard, Buttons, etc.)
+│   ├── lib/               # API client (axios wrapper) + types
+│   ├── test/              # test setup + mocks
+│   └── styles/            # Tailwind configuration
+```
+**Key Concepts**
+- **App Router + Server Components:** Static and dynamic routes (`/drops/[id]`) built using Next.js 15.
+- **Client Components:** Interactive parts (`DropCard`, `ClaimPage`) marked with `"use client"`.
+- **TanStack Query:** Handles caching, mutations, and background refetching.
+- **UI Kit:** `shadcn/ui` for accessible components; `Sonner` for toast notifications.
+- **Auth Flow:** Access token in `localStorage`; redirect to `/login` if missing.
+- **Error & Loading States:** Lightweight placeholders for better UX.
+
+---
+
+### ✨ Features Implemented
+
+✅ **Drop list** — Fetches `/drops` and renders cards with “View details.”  
+✅ **Drop detail** — Shows slot info, waitlist join/leave, and claim actions.  
+✅ **Claim flow** — Displays the returned code; idempotent (same code always returned).  
+✅ **Admin panel** — CRUD for drops with inline edit/delete.  
+✅ **Auth system** — Login, signup (with `Register as Admin` checkbox), logout.  
+✅ **Responsive UI** — TailwindCSS-based design.
+
+---
+
+### 🧪 Frontend Tests
+
+**Test Runner:** Vitest + RTL  
+**Setup:** `src/test/setupTests.tsx` (mocks `next/navigation`, provides `QueryClientProvider`).
+
+| File | Scope | What It Tests |
+|------|--------|---------------|
+| `ClaimPage.idempotency.test.tsx` | Claim flow | Multiple clicks → same code (idempotent). |
+| `ClaimPage.status.test.tsx` | Claim flow | Shows correct text: **“Ends in:”** (open) and **“Starts in:”** (before window). |
+
+**Notes**
+- Mocked API via `__mocks__/apiClient.ts`.
+- Run with `npm run test`.
+
+---
+
+### ⚙️ Environment Variables
+
+`.env.local` in `frontend/`: NEXT_PUBLIC_API_URL=http://localhost:3001  
+
+---
+
+### 🚀 Run the Frontend
+
+```
+cd frontend
+npm install
+npm run dev
+
+Open http://localhost:3000￼
+```
+
+
+
+## 📸 Screenshots
+
+**Login**
+
+![Login](docs/screenshots/dropspot-login.jpeg)
+
+**Drop List**
+
+![Drop List](docs/screenshots/dropspot-drops.jpeg)
+
+**Drop Detail**
+
+![Drop Detail](docs/screenshots/dropspot-drop-detail.jpeg)
+
+**Claim Page**
+
+![Claim Page](docs/screenshots/dropspot-claim.jpeg)
+
+**Admin Panel**
+
+![Admin Panel](docs/screenshots/dropspot-admin.jpeg)
+
